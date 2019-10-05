@@ -1,0 +1,43 @@
+Function Get-Weather {
+[Alias('gw')]
+
+Param(
+[string] $Location,
+[int] $Days = 5
+)
+
+$Map = Invoke-RestMethod -Uri "http://open.mapquestapi.com/geocoding/v1/address?key=o36UNN1EIinmzq15yvbvRGB4zvsuog5v&location=$Location"
+$lat = $Map.results.locations[0].latLng.lat
+$long = $Map.results.locations[0].latLng.lng
+
+
+$DS = Invoke-RestMethod -Uri "https://api.darksky.net/forecast/4317604ee4a46ffeba583ee2f649be95/$lat,$($long)"
+
+for($i = 0; $i -lt $Days; $i++)
+{
+    New-Object -typename PSObject -Prop ([ordered] @{
+
+'Date and Time' = UDate($DS.daily.data[$i].time)
+'Summary' = $DS.daily.data[$i].summary
+'Tempature High F' = $DS.daily.data[$i].temperatureHigh
+'Tempature Low F' = $DS.daily.data[$i].temperatureLow
+'Tempature High C' = FairtoCel($DS.daily.data[$i].temperatureHigh)
+'Tempature Low C' = FairtoCel($DS.daily.data[$i].temperatureLow)
+
+})
+}
+
+
+}
+
+function FairtoCel([double] $fahrenheit)
+{
+    $celcius = $fahrenheit - 32
+    $celcius = $celcius / 1.8
+    [math]::round($celcius,2)
+}
+Function UDate ($UnixDate) 
+{
+
+   [timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($UnixDate))
+}
