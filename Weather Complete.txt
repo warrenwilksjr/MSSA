@@ -14,13 +14,13 @@ to be the deafault output when the user does not specifiy the amount of days#>
 )
 <#Using the Maps variable to get the information from mapquest. 
 Then using the lat and long varibles to point the lat and long information that is needed.#>
-$Map = Invoke-RestMethod -Uri "http://open.mapquestapi.com/geocoding/v1/address?key=o36UNN1EIinmzq15yvbvRGB4zvsuog5v&location=$Location"
+$Map = Invoke-RestMethod -Uri "http://open.mapquestapi.com/geocoding/v1/address?key="yourkey"&location=$Location"
 $lat = $Map.results.locations[0].latLng.lat
 $long = $Map.results.locations[0].latLng.lng
 
 <#calling on the Darksky api to provide my weather information. Plugged in the lat and long 
 varibles to give the api a location#>
-$DS = Invoke-RestMethod -Uri "https://api.darksky.net/forecast/4317604ee4a46ffeba583ee2f649be95/$lat,$($long)"
+$DS = Invoke-RestMethod -Uri "https://api.darksky.net/forecast/"yourkey"/$lat,$($long)"
 
 <#This if statement is used to determine if the script will display fahrenheit,celsius or both.#>
 if( $Unit -eq 'C')
