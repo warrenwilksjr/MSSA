@@ -1,31 +1,37 @@
-﻿<#This script is to allow the user to get a weather report based on the city#>
+<#This script is to allow the user to get a weather report based on the city#>
 
 <#This function gets the weather details for the user#>
 Function Get-Weather {
 <#Created a alias for my Get-Weather cmdlet#>
 [Alias('gw')]
 
-Param(
-[string] $Location,
+[CmdletBinding()]
+    param(
+        [Parameter(Position=0,mandatory=$true)]
+        [string] $Location,
 <#Set days equal to 1 because I want a at least one day of the forcast 
 to be the deafault output when the user does not specifiy the amount of days#>
-[int] $Days = 1,
-[char] $Unit
+[int] $Days = "$i+1",
+[string] $Unit
 )
 <#Using the Maps variable to get the information from mapquest. 
 Then using the lat and long varibles to point the lat and long information that is needed.#>
-$Map = Invoke-RestMethod -Uri "http://open.mapquestapi.com/geocoding/v1/address?key="yourkey"&location=$Location"
+$Map = Invoke-RestMethod -Uri "http://open.mapquestapi.com/geocoding/v1/address?key=o36UNN1EIinmzq15yvbvRGB4zvsuog5v&location=$Location"
 $lat = $Map.results.locations[0].latLng.lat
 $long = $Map.results.locations[0].latLng.lng
 
 <#calling on the Darksky api to provide my weather information. Plugged in the lat and long 
 varibles to give the api a location#>
-$DS = Invoke-RestMethod -Uri "https://api.darksky.net/forecast/"yourkey"/$lat,$($long)"
+$DS = Invoke-RestMethod -Uri "https://api.darksky.net/forecast/4317604ee4a46ffeba583ee2f649be95/$lat,$long"
 
-<#This if statement is used to determine if the script will display fahrenheit,celsius or both.#>
+<#This line capitalizes the first letter of the location entered.#> 
+Write-Host "`n" "Here's your weather for :" ($Location.toCharArray()[0].tostring().toUpper() + $Location.remove(0,1))
+
+<#This if statement is used to determine if the script will display fahrenheit,celsius, kelvin or all three.#>
 if( $Unit -eq 'C')
 {
-<#created a for loop in order print on the amount of days needed to be displayed#>
+<#This if statement will display the unit information in celsius.
+created a for loop in order print on the amount of days needed to be displayed#>
 for($i = 0; $i -lt $Days; $i++)
 {
 <#created a hash table to make all my information into objects in order to print them out in list or table format.
@@ -35,45 +41,118 @@ Used 'ordered' to allow the information to be read left to right#>
 <#Each object is pointing a certain type of information that is needed#>
 'Date and Time' = UDate($DS.daily.data[$i].time)
 'Summary' = $DS.daily.data[$i].summary
-'Tempature High C' = FairtoCel($DS.daily.data[$i].temperatureHigh)
-'Tempature Low C' = FairtoCel($DS.daily.data[$i].temperatureLow)
+'Temperature High in Celsius' = FairtoCel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Celsius' = FairtoCel($DS.daily.data[$i].temperatureLow)
 
 })
 }
-
-
 }
-elseif($Unit -eq 'B' )
-<#This statement will display both units of tempature#>
+elseif( $Unit -eq 'F')
 {
+<#This elseif statment display the unit in fahrenheit#>
 for($i = 0; $i -lt $Days; $i++)
 {
+
+    New-Object -typename PSObject -Prop ([ordered] @{
+
+<#Each object is pointing a certain type of information that is needed#>
+'Date and Time' = UDate($DS.daily.data[$i].time)
+'Summary' = $DS.daily.data[$i].summary
+'Temperature High in Fahrenheit' = ($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Fahrenheit' = ($DS.daily.data[$i].temperatureLow)
+
+})
+}
+}
+elseif( $Unit -eq 'K')
+{
+<#This elseif statment display the unit in Kelvin#>
+for($i = 0; $i -lt $Days; $i++)
+{
+
+    New-Object -typename PSObject -Prop ([ordered] @{
+
+<#Each object is pointing a certain type of information that is needed#>
+'Date and Time' = UDate($DS.daily.data[$i].time)
+'Summary' = $DS.daily.data[$i].summary
+'Temperature High in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureLow)
+
+})
+}
+}
+elseif( $Unit -eq 'FC' -or  $Unit -eq 'CF')
+{
+<#This elseif statment display the units in Fahrenheit and celsius#>
+for($i = 0; $i -lt $Days; $i++)
+{
+
+    New-Object -typename PSObject -Prop ([ordered] @{
+
+<#Each object is pointing a certain type of information that is needed#>
+'Date and Time' = UDate($DS.daily.data[$i].time)
+'Summary' = $DS.daily.data[$i].summary
+'Temperature High in Fahrenheit' = ($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Fahrenheit' = ($DS.daily.data[$i].temperatureLow)
+'Temperature High in Celsius' = FairtoCel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Celsius' = FairtoCel($DS.daily.data[$i].temperatureLow)
+
+})
+}
+}
+elseif( $Unit -eq 'FK'-or  $Unit -eq 'KF')
+{
+<#This elseif statment display the units in fahrenheit and Kelvin#>
+for($i = 0; $i -lt $Days; $i++)
+{
+
+    New-Object -typename PSObject -Prop ([ordered] @{
+
+<#Each object is pointing a certain type of information that is needed#>
+'Date and Time' = UDate($DS.daily.data[$i].time)
+'Summary' = $DS.daily.data[$i].summary
+'Temperature High in Fahrenheit' = ($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Fahrenheit' = ($DS.daily.data[$i].temperatureLow)
+'Temperature High in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureLow)
+
+})
+}
+}
+elseif( $Unit -eq 'CK' -or  $Unit -eq 'KC')
+{
+<#This elseif statment display the units in Celsius and Kelvin#>
+for($i = 0; $i -lt $Days; $i++)
+{
+
     New-Object -typename PSObject -Prop ([ordered] @{
 
 'Date and Time' = UDate($DS.daily.data[$i].time)
 'Summary' = $DS.daily.data[$i].summary
-'Tempature High F' = $DS.daily.data[$i].temperatureHigh
-'Tempature Low F' = $DS.daily.data[$i].temperatureLow
-'Tempature High C' = FairtoCel($DS.daily.data[$i].temperatureHigh)
-'Tempature Low C' = FairtoCel($DS.daily.data[$i].temperatureLow)
-
+'Temperature High in Celsius' = FairtoCel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Celsius' = FairtoCel($DS.daily.data[$i].temperatureLow)
+'Temperature High in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureLow)
 })
 }
 }
-
 else
 {
+<#This else statment display the units in Fahrenheit,Celsius, and Kelvin#>
 for($i = 0; $i -lt $Days; $i++)
 {
+
     New-Object -typename PSObject -Prop ([ordered] @{
 
 'Date and Time' = UDate($DS.daily.data[$i].time)
 'Summary' = $DS.daily.data[$i].summary
-'Tempature High F' = $DS.daily.data[$i].temperatureHigh
-'Tempature Low F' = $DS.daily.data[$i].temperatureLow
-
+'Temperature High  in Fahrenheit' = ($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Fahrenheit' = ($DS.daily.data[$i].temperatureLow)
+'Temperature High in Celsius' = FairtoCel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Celsius' = FairtoCel($DS.daily.data[$i].temperatureLow)
+'Temperature High in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureHigh)
+'Temperature Low in Kelvin' = FairtoKel($DS.daily.data[$i].temperatureLow)
 })
-
 }
 }
 }
@@ -91,4 +170,14 @@ Function UDate ($UnixDate)
 {
 
    [timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($UnixDate))
+}
+
+<#This function is converting fahrenheit into celsius#>
+function FairtoKel([double] $fahrenheit)
+{
+    $Kelvin = $fahrenheit - 32
+    $kelvin = $Kelvin * 5
+    $kelvin = $kelvin / 9
+    $kelvin = $Kelvin+273.15
+    [math]::round($Kelvin,2)
 }
